@@ -7,9 +7,6 @@ AIA stands for Atmospheric Imaging Assembly which is "four-telescope array, oper
 ## AIA Panel - Sun Image Connection
 
 # AIA 193 
-
-![Example Image](https://sdo.gsfc.nasa.gov/assets/img/latest/latest_4096_0193.jpg)
-
 Shows outer atmosphere of sun + Shows hot flare plasma. |<mark>2.6 million F|
 
 # AIA 171 
