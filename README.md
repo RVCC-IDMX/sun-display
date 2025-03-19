@@ -7,10 +7,10 @@ AIA stands for Atmospheric Imaging Assembly which is "four-telescope array, oper
 ## AIA Panel - Sun Image Connection
 
 # AIA 193 
-Shows outer atmosphere of sun |<mark>2.6 million F|
+Shows outer atmosphere of sun + Shows hot flare plasma. |<mark>2.6 million F|
 
 # AIA 171 
-Shows where there is a strong magnetic field near the surface + Shows coronal loops |<mark>1.8 million F|
+Shows where there is a strong magnetic field near the surface + Shows coronal loops. |<mark>1.8 million F|
 
 # AIA 304 
 Shows areas that have cooler dense plumes of plasma + Bright areas show high plasma density. |<mark>90,000 F|
