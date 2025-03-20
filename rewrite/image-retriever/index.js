@@ -110,7 +110,7 @@ async function createImage(imageUrl, maskUrl, wavelength) {
         //Add date
         let date = new Date();
         const month = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        let dateTimeFileName = `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}T${date.getUTCHours()}.${date.getUTCMinutes()}.${date.getUTCSeconds()}`;
+        let dateTimeFileName = `${date.getUTCFullYear()}-${(date.getUTCMonth() + 1).toString().padStart(2, '0')}-${date.getUTCDate().toString().padStart(2, '0')}T${date.getUTCHours().toString().padStart(2, '0')}.${date.getUTCMinutes().toString().padStart(2, '0')}.${date.getUTCSeconds().toString().padStart(2, '0')}`;
 
         context.fillStyle = '#fff';
         context.font = 'bold 60pt Arial'
