@@ -8,6 +8,14 @@ const imageInterval = 15 // Minutes between creating new images
 const dateRemoveMask = './masks/date-remove-mask.png'; // Used for every image other than wavelength 171
 const aia171Mask = './masks/aia171-mask.png'; // Used for just wavelength 171 images
 
+const imageSize = 2048; //Change if downloading higher or lower res image
+
+const canvas = createCanvas(imageSize, imageSize);
+const context = canvas.getContext('2d');
+
+context.fillStyle = '#000';
+context.fillRect(0, 0, imageSize, imageSize);
+
 async function ensureDirs() {
     try {
         // Make sure main dir exists before making sub dir
@@ -21,16 +29,17 @@ async function ensureDirs() {
         ]);
 
         console.log('All directories created.');
-    } catch (error) {
-        console.error("Error while creating directories:", error);
+    } catch (err) {
+        console.error("Error while creating directories:", err);
     }
 }
 
+// Making this async avoids the highly unlikley error of chron running before directory exists
 async function createDir(name) {
     const dirPath = path.join(__dirname, name);
     return new Promise((resolve, reject) => {
         if (!fs.existsSync(dirPath)) {
-            fs.mkdir(dirPath, { recursive: true }, (err) => {
+            fs.mkdir(dirPath, (err) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -43,7 +52,6 @@ async function createDir(name) {
         }
     });
 }
-
 
 ensureDirs().then(() => {
     console.log('Starting chron.');
@@ -62,8 +70,8 @@ async function fetchWithRetry(url, retries = 3, delay = 5000) {
             const arrayBuffer = await response.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
             return await loadImage(buffer);
-        } catch (error) {
-            console.error(`Attempt ${i + 1} failed for ${url}:`, error);
+        } catch (err) {
+            console.error(`Attempt ${i + 1} failed for ${url}:`, err);
             if (i < retries - 1) await new Promise(res => setTimeout(res, delay));
         }
     }
@@ -77,14 +85,6 @@ async function createImages() {
     await createImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0211.jpg', dateRemoveMask, 'aia211');
     await createImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0304.jpg', dateRemoveMask, 'aia304');
 }
-
-const imageSize = 2048; //Change if downloading higher or lower res image
-
-const canvas = createCanvas(imageSize, imageSize);
-const context = canvas.getContext('2d');
-
-context.fillStyle = '#000';
-context.fillRect(0, 0, imageSize, imageSize);
 
 async function createImage(imageUrl, maskUrl, wavelength) {
     let sun = await fetchWithRetry(imageUrl);
