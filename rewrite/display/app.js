@@ -5,7 +5,7 @@ const dateText = document.getElementById('date-text');
 const defaultWavelength = 'aia171';
 const pathToRetriever = '../image-retriever/';
 
-const imageToSkip = 10; // How many images giving an input will skip
+const imageToSkip = 5; // How many images giving an input will skip
 
 let imgFilePaths = {};
 let imageIndex = 0;
@@ -25,8 +25,10 @@ async function main() {
         if (event.key === '2') changeWavelength('aia193');
         if (event.key === '3') changeWavelength('aia211');
         if (event.key === '4') changeWavelength('aia304');
-        if (event.key === 'ArrowLeft') moveBackImage();
-        if (event.key === 'ArrowRight') moveForwardImage();
+        if (event.key === 'ArrowLeft') moveBackImage(1);
+        if (event.key === 'ArrowRight') moveForwardImage(1);
+        if (event.key === 'a') moveBackImage(2);
+        if (event.key === 'd') moveForwardImage(2);
     });
 }
 
@@ -60,9 +62,9 @@ function changeWavelength(wavelength) {
     }
 }
 
-function moveBackImage() {
-    if (imageIndex + imageToSkip <= imgFilePaths[currentWavelength].length - 1) {
-        imageIndex += imageToSkip;
+function moveBackImage(multiplier) {
+    if (imageIndex + (imageToSkip * multiplier) <= imgFilePaths[currentWavelength].length - 1) {
+        imageIndex += (imageToSkip * multiplier);
     } else {
         imageIndex = imgFilePaths[currentWavelength].length - 1;
     }
@@ -70,9 +72,9 @@ function moveBackImage() {
     formatDate(imgFilePaths[currentWavelength][imageIndex]);
 }
 
-function moveForwardImage() {
-    if (imageIndex - imageToSkip >= 0) {
-        imageIndex -= imageToSkip;
+function moveForwardImage(multiplier) {
+    if (imageIndex - (imageToSkip * multiplier) >= 0) {
+        imageIndex -= (imageToSkip * multiplier);
     } else {
         imageIndex = 0;
     }
