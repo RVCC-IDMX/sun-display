@@ -1,8 +1,9 @@
-const sunImg = document.getElementById('sun-photo');
+const canvas = document.getElementById('sun-canvas');
+const ctx = canvas.getContext('2d');
 const dateText = document.getElementById('date-text');
 
 const defaultWavelength = 'aia171';
-const pathToRetriever = '../image-retriever/'
+const pathToRetriever = '../image-retriever/';
 
 const imageToSkip = 10; // How many images giving an input will skip
 
@@ -16,81 +17,68 @@ main();
 async function main() {
     await getFilePaths();
 
-    sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imageIndex];
-    formatDate(imgFilePaths[currentWavelength][imageIndex])
+    updateCanvasImage(imgFilePaths[currentWavelength][imageIndex]);
+    formatDate(imgFilePaths[currentWavelength][imageIndex]);
 
     document.addEventListener('keydown', (event) => {
-        if (event.key === '1') {
-            changeWavelength('aia171');
-        }
+        if (event.key === '1') changeWavelength('aia171');
+        if (event.key === '2') changeWavelength('aia193');
+        if (event.key === '3') changeWavelength('aia211');
+        if (event.key === '4') changeWavelength('aia304');
+        if (event.key === 'ArrowLeft') moveBackImage();
+        if (event.key === 'ArrowRight') moveForwardImage();
     });
+}
 
-    document.addEventListener('keydown', (event) => {
-        if (event.key === '2') {
-            changeWavelength('aia193');
-        }
-    });
+function updateCanvasImage(imagePath) {
+    const img = new Image();
+    img.src = pathToRetriever + imagePath;
 
-    document.addEventListener('keydown', (event) => {
-        if (event.key === '3') {
-            changeWavelength('aia211');
-        }
-    });
+    img.onload = () => {
+        const maxCanvasWidth = window.innerWidth * 1;
+        const maxCanvasHeight = window.innerHeight * 1;
 
-    document.addEventListener('keydown', (event) => {
-        if (event.key === '4') {
-            changeWavelength('aia304');
-        }
-    });
+        let scale = Math.min(maxCanvasWidth / img.width, maxCanvasHeight / img.height);
 
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'ArrowLeft') {
-            moveBackImage();
-        }
-    });
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
 
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'ArrowRight') {
-            moveForwardImage();
-        }
-    });
-};
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+}
 
 function changeWavelength(wavelength) {
     if (imgFilePaths[wavelength][imageIndex]) {
         currentWavelength = wavelength;
-        sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imageIndex];
-        formatDate(imgFilePaths[currentWavelength][imageIndex])
-    }
-    else {
+        updateCanvasImage(imgFilePaths[currentWavelength][imageIndex]);
+        formatDate(imgFilePaths[currentWavelength][imageIndex]);
+    } else {
         currentWavelength = wavelength;
-        sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imgFilePaths[currentWavelength].length - 1];
-        formatDate(imgFilePaths[currentWavelength][imgFilePaths[currentWavelength].length - 1])
+        updateCanvasImage(imgFilePaths[currentWavelength][imgFilePaths[currentWavelength].length - 1]);
+        formatDate(imgFilePaths[currentWavelength][imgFilePaths[currentWavelength].length - 1]);
     }
-};
-
+}
 
 function moveBackImage() {
     if (imageIndex + imageToSkip <= imgFilePaths[currentWavelength].length - 1) {
         imageIndex += imageToSkip;
-    }
-    else {
+    } else {
         imageIndex = imgFilePaths[currentWavelength].length - 1;
     }
-    sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imageIndex];
-    formatDate(imgFilePaths[currentWavelength][imageIndex])
-};
+    updateCanvasImage(imgFilePaths[currentWavelength][imageIndex]);
+    formatDate(imgFilePaths[currentWavelength][imageIndex]);
+}
 
 function moveForwardImage() {
-    if (imageIndex-imageToSkip >= 0) {
+    if (imageIndex - imageToSkip >= 0) {
         imageIndex -= imageToSkip;
-    }
-    else {
+    } else {
         imageIndex = 0;
     }
-    sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imageIndex];
-    formatDate(imgFilePaths[currentWavelength][imageIndex])
-};
+    updateCanvasImage(imgFilePaths[currentWavelength][imageIndex]);
+    formatDate(imgFilePaths[currentWavelength][imageIndex]);
+}
 
 async function getFilePaths() {
     const url = "../image-retriever/wavelengths.json";
@@ -105,7 +93,7 @@ async function getFilePaths() {
     } catch (error) {
         console.error(error.message);
     }
-};
+}
 
 function formatDate(inputString) {
     const dateString = inputString.split('-')[1] + '-' + inputString.split('-')[2] + '-' + inputString.split('-')[3].split('T')[0];
@@ -116,4 +104,4 @@ function formatDate(inputString) {
     const formattedDate = `${monthNames[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
     
     dateText.innerHTML = formattedDate;
-};
+}
