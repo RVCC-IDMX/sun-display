@@ -23,3 +23,6 @@ Shows active region of outer atmosphere the corona + Coronal Mass Ejections and 
 
 ## Sun Image Links
 You can find links to the sun images we are pulling from at various different wavelengths [here.](https://sdo.gsfc.nasa.gov/data/)
+
+## Data
+Courtesy of NASA/SDO and the AIA, EVE, and HMI science teams.
