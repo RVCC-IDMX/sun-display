@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const cron = require('node-cron');
-const { Console } = require('console');
 
 const maxImages = 300 // Temp number
 
@@ -61,26 +60,6 @@ ensureDirs().then(() => {
     });
 });
 
-/*
-// Sometimes connection will just close, retrying seems to help some times
-async function fetchWithRetry(url, retries = 3, delay = 5000) {
-    for (let i = 0; i < retries; i++) {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`Failed to fetch image, status: ${response.status}`);
-
-            const arrayBuffer = await response.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            return await loadImage(buffer);
-        } catch (err) {
-            console.error(`Attempt ${i + 1} failed for ${url}:`, err);
-            if (i < retries - 1) await new Promise(res => setTimeout(res, delay));
-        }
-    }
-    return null;
-}
-*/
-
 // Await might not be nessecary but I dont want to pull 4 images from the servers at once
 async function createImages() {
     await fetchImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0171.jpg', 'aia171')
@@ -89,7 +68,6 @@ async function createImages() {
     await fetchImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0304.jpg', 'aia304');
     saveWavelengths();
 }
-
 
 // Probably too slow with thousands of images, who knows
 function saveWavelengths() {
@@ -118,14 +96,36 @@ function saveWavelengths() {
     console.log('Updated wavelengths.json');
 };
 
-async function fetchImage(url, wavelength) {
-    const response = await fetch(url);
-    const formattedDate = getConvertedDate(response.headers.get('last-modified'));
+// Sometimes connection will just close, retrying seems to help some times
+async function fetchImage(url, wavelength, retries = 3, delay = 5000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(url);
 
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer, 'binary');
-    fs.writeFileSync(`./download/${wavelength}/` + `${wavelength}-${formattedDate}.jpg`, buffer);
-    console.log(`Successfully downloaded ${wavelength}-${formattedDate}.jpg`)
+            if (!response.ok) {
+                throw new Error(`Failed to fetch image, status: ${response.status}`);
+            }
+
+            const formattedDate = getConvertedDate(response.headers.get('last-modified'));
+
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer, 'binary');
+
+            const filePath = `./download/${wavelength}/${wavelength}-${formattedDate}.jpg`;
+            fs.writeFileSync(filePath, buffer);
+
+            console.log(`Successfully downloaded ${wavelength}-${formattedDate}.jpg`);
+            return;
+
+        } catch (err) {
+            console.error(`Attempt ${i + 1} failed for ${url}:`, err);
+            if (i < retries - 1) {
+                console.log(`Retrying in ${delay / 1000} seconds...`);
+                await new Promise(res => setTimeout(res, delay));
+            }
+        }
+    }
+    console.error(`Failed to fetch image after ${retries} attempts.`);
 }
 
 function getConvertedDate(dateString) {
