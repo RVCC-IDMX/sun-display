@@ -65,7 +65,7 @@ async function createDir(name) {
 ensureDirs().then(() => {
     console.log('Starting chron.');
 
-    createImages();
+    saveWavelengths();
 
     cron.schedule(`*/${imageInterval} * * * *`, () => {
         createImages();
@@ -121,26 +121,39 @@ async function createImage(imageUrl, maskUrl, wavelength) {
         const filePath = `./download/${wavelength}/${wavelength}-${dateTimeFileName}.jpg`;
         fs.writeFileSync(filePath, buffer);
         console.log(`Created new image for ${wavelength} at ${dateTimeFileName}`);
-
-        wavelengths[wavelength].unshift(filePath);
     }
     else {
         return;
     }
 };
 
-// This sucks, I need to rewrite it so it is accurate as to what is actually in the downloads folder...
+// Probably too slow with thousands of images, who knows
 function saveWavelengths() {
+    // Clear arrays so they dont add duplicate file paths
     for (let wavelength in wavelengths) {
-        while (wavelengths[wavelength].length > maxImages) {
-            wavelengths[wavelength].pop();
-        }
+        wavelengths[wavelength].length = 0;
     }
 
+    for (let wavelength in wavelengths) {
+        // Sort files by modification time to make sure most recent is on top
+        fs.readdirSync(`./download/${wavelength}/`)
+            .map(fileName => {
+                const filePath = path.join(`./download/${wavelength}/`, fileName);
+                const stats = fs.statSync(filePath);
+                return { fileName, mtime: stats.mtime };
+            })
+            .sort((a, b) => b.mtime - a.mtime)
+            .map(file => {
+                wavelengths[wavelength].push(path.posix.join(`./download/${wavelength}/`, file.fileName));
+            });
+    }
+
+    // Write to JSON
     const jsonFilePath = './wavelengths.json';
     fs.writeFileSync(jsonFilePath, JSON.stringify(wavelengths, null, 2));
     console.log('Updated wavelengths.json');
-}
+};
+
 
 /*
 async function fetchImage(url, path) {
