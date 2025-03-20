@@ -148,7 +148,7 @@ function saveWavelengths() {
             });
     }
 
-    // Write to JSON
+    // Write to JSON so it can be refrenced in display
     const jsonFilePath = './wavelengths.json';
     fs.writeFileSync(jsonFilePath, JSON.stringify(wavelengths, null, 2));
     console.log('Updated wavelengths.json');
