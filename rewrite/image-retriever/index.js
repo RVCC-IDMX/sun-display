@@ -3,40 +3,79 @@ const path = require('path');
 const cron = require('node-cron');
 const { createCanvas, loadImage } = require('canvas');
 
-const imageInterval = 15 // Minutes between creating new images
+const imageInterval = 5 // Minutes between creating new images
 
 const dateRemoveMask = './masks/date-remove-mask.png'; // Used for every image other than wavelength 171
 const aia171Mask = './masks/aia171-mask.png'; // Used for just wavelength 171 images
 
-createDir('download');
-createDir('download/aia171');
-createDir('download/aia193');
-createDir('download/aia211');
-createDir('download/aia304');
+async function ensureDirs() {
+    try {
+        // Make sure main dir exists before making sub dir
+        await createDir('download');
 
+        await Promise.all([
+            createDir('download/aia171'),
+            createDir('download/aia193'),
+            createDir('download/aia211'),
+            createDir('download/aia304')
+        ]);
 
-cron.schedule(`* */${imageInterval} * * * *`, () => {
-    createImages();
-});
-
-createImages();
-
-function createDir(name) {
-    if (!fs.existsSync(path.join(__dirname, name))) {
-        fs.mkdir(path.join(__dirname, name), (err) => {
-            if (err) {
-                return console.error(err);
-            }
-            console.log(`Created images directory at: ${path.join(__dirname, name)}`);
-        });
+        console.log('All directories created.');
+    } catch (error) {
+        console.error("Error while creating directories:", error);
     }
 }
 
-function createImages() {
-    createImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0171.jpg', aia171Mask, 'aia171');
-    createImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0193.jpg', dateRemoveMask, 'aia193');
-    createImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0211.jpg', dateRemoveMask, 'aia211');
-    createImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0304.jpg', dateRemoveMask, 'aia304');
+async function createDir(name) {
+    const dirPath = path.join(__dirname, name);
+    return new Promise((resolve, reject) => {
+        if (!fs.existsSync(dirPath)) {
+            fs.mkdir(dirPath, { recursive: true }, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    console.log(`Created images directory at: ${dirPath}`);
+                    resolve();
+                }
+            });
+        } else {
+            resolve();
+        }
+    });
+}
+
+
+ensureDirs().then(() => {
+    console.log('Starting chron.');
+
+    cron.schedule(`*/${imageInterval} * * * *`, () => {
+        createImages();
+    });
+});
+
+async function fetchWithRetry(url, retries = 3, delay = 5000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Failed to fetch image, status: ${response.status}`);
+
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            return await loadImage(buffer);
+        } catch (error) {
+            console.error(`Attempt ${i + 1} failed for ${url}:`, error);
+            if (i < retries - 1) await new Promise(res => setTimeout(res, delay));
+        }
+    }
+    return null;
+}
+
+// Await might not be nessecary but I dont want to pull 4 images from the servers at once
+async function createImages() {
+    await createImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0171.jpg', aia171Mask, 'aia171');
+    await createImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0193.jpg', dateRemoveMask, 'aia193');
+    await createImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0211.jpg', dateRemoveMask, 'aia211');
+    await createImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0304.jpg', dateRemoveMask, 'aia304');
 }
 
 const imageSize = 2048; //Change if downloading higher or lower res image
@@ -48,15 +87,8 @@ context.fillStyle = '#000';
 context.fillRect(0, 0, imageSize, imageSize);
 
 async function createImage(imageUrl, maskUrl, wavelength) {
-    let sun = await loadImage(imageUrl).catch((err) => {
-        console.error(`Failed to load sun image for ${wavelength}:`, err);
-        return null;
-    });
-
-    let mask = await loadImage(maskUrl).catch((err) => {
-        console.error(`Failed to load mask:`, err);
-        return null;
-    });
+    let sun = await fetchWithRetry(imageUrl);
+    let mask = await loadImage(maskUrl);
 
     if (sun && mask) {
         context.drawImage(sun, 0, 0, imageSize, imageSize);
