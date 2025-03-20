@@ -21,25 +21,25 @@ async function main() {
 
     document.addEventListener('keydown', (event) => {
         if (event.key === '1') {
-            changeWavelength(1);
+            changeWavelength('aia171');
         }
     });
 
     document.addEventListener('keydown', (event) => {
         if (event.key === '2') {
-            changeWavelength(2);
+            changeWavelength('aia193');
         }
     });
 
     document.addEventListener('keydown', (event) => {
         if (event.key === '3') {
-            changeWavelength(3);
+            changeWavelength('aia211');
         }
     });
 
     document.addEventListener('keydown', (event) => {
         if (event.key === '4') {
-            changeWavelength(4);
+            changeWavelength('aia304');
         }
     });
 
@@ -56,41 +56,37 @@ async function main() {
     });
 };
 
-function changeWavelength(index) {
-    switch (index) {
-        case 1:
-            currentWavelength = 'aia171';
-            sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imageIndex];
-            formatDate(imgFilePaths[currentWavelength][imageIndex])
-            break;
-        case 2:
-            currentWavelength = 'aia193';
-            sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imageIndex];
-            formatDate(imgFilePaths[currentWavelength][imageIndex])
-            break;
-        case 3:
-            currentWavelength = 'aia211';
-            sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imageIndex];
-            formatDate(imgFilePaths[currentWavelength][imageIndex])
-            break;
-        case 4:
-            currentWavelength = 'aia304';
-            sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imageIndex];
-            formatDate(imgFilePaths[currentWavelength][imageIndex])
-            break;
+function changeWavelength(wavelength) {
+    if (imgFilePaths[wavelength][imageIndex]) {
+        currentWavelength = wavelength;
+        sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imageIndex];
+        formatDate(imgFilePaths[currentWavelength][imageIndex])
+    }
+    else {
+        currentWavelength = wavelength;
+        sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imgFilePaths[currentWavelength].length - 1];
+        formatDate(imgFilePaths[currentWavelength][imgFilePaths[currentWavelength].length - 1])
     }
 };
 
+
 function moveBackImage() {
-    if (imageIndex < imgFilePaths.aia171.length - 1)
+    if (imageIndex + imageToSkip <= imgFilePaths[currentWavelength].length - 1) {
         imageIndex += imageToSkip;
+    }
+    else {
+        imageIndex = imgFilePaths[currentWavelength].length - 1;
+    }
     sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imageIndex];
     formatDate(imgFilePaths[currentWavelength][imageIndex])
 };
 
 function moveForwardImage() {
-    if (imageIndex > 0) {
+    if (imageIndex-imageToSkip >= 0) {
         imageIndex -= imageToSkip;
+    }
+    else {
+        imageIndex = 0;
     }
     sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imageIndex];
     formatDate(imgFilePaths[currentWavelength][imageIndex])
