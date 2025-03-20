@@ -3,10 +3,12 @@ const sunImg = document.getElementById('sun-photo');
 const defaultWavelength = 'aia171';
 const pathToRetriever = '../image-retriever/'
 
+const imageToSkip = 4; // How many images giving an input will skip
+
 let imgFilePaths = {};
 let imageIndex = 0;
 
-let currentWavelength;
+let currentWavelength = defaultWavelength;
 
 main();
 
@@ -76,13 +78,13 @@ function changeWavelength(index) {
 
 function moveBackImage() {
     if (imageIndex < imgFilePaths.aia171.length - 1)
-        imageIndex++;
+        imageIndex += imageToSkip;
     sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imageIndex];
 }
 
 function moveForwardImage() {
     if (imageIndex > 0) {
-        imageIndex--;
+        imageIndex -= imageToSkip;
     }
     sunImg.src = pathToRetriever + imgFilePaths[currentWavelength][imageIndex];
 }
