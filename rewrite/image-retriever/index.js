@@ -3,12 +3,21 @@ const path = require('path');
 const cron = require('node-cron');
 const { createCanvas, loadImage } = require('canvas');
 
+const maxImages = 300 // Temp number
+
 const imageInterval = 15 // Minutes between creating new images
 
 const dateRemoveMask = './masks/date-remove-mask.png'; // Used for every image other than wavelength 171
 const aia171Mask = './masks/aia171-mask.png'; // Used for just wavelength 171 images
 
 const imageSize = 2048; //Change if downloading higher or lower res image
+
+const wavelengths = {
+    aia171: [],
+    aia193: [],
+    aia211: [],
+    aia304: []
+};
 
 const canvas = createCanvas(imageSize, imageSize);
 const context = canvas.getContext('2d');
@@ -56,11 +65,14 @@ async function createDir(name) {
 ensureDirs().then(() => {
     console.log('Starting chron.');
 
+    createImages();
+
     cron.schedule(`*/${imageInterval} * * * *`, () => {
         createImages();
     });
 });
 
+// Sometimes connection will just close, retrying seems to help some times
 async function fetchWithRetry(url, retries = 3, delay = 5000) {
     for (let i = 0; i < retries; i++) {
         try {
@@ -84,6 +96,7 @@ async function createImages() {
     await createImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0193.jpg', dateRemoveMask, 'aia193');
     await createImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0211.jpg', dateRemoveMask, 'aia211');
     await createImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0304.jpg', dateRemoveMask, 'aia304');
+    saveWavelengths();
 }
 
 async function createImage(imageUrl, maskUrl, wavelength) {
@@ -105,13 +118,29 @@ async function createImage(imageUrl, maskUrl, wavelength) {
         context.fillText(`${month[date.getMonth()]} ${date.getUTCDate()}, ${date.getFullYear()}`, 1024, 2033);
 
         const buffer = canvas.toBuffer('image/png');
-        fs.writeFileSync(`./download/${wavelength}/${wavelength}-${dateTimeFileName}.jpg`, buffer);
+        const filePath = `./download/${wavelength}/${wavelength}-${dateTimeFileName}.jpg`;
+        fs.writeFileSync(filePath, buffer);
         console.log(`Created new image for ${wavelength} at ${dateTimeFileName}`);
+
+        wavelengths[wavelength].unshift(filePath);
     }
     else {
         return;
     }
 };
+
+// This sucks, I need to rewrite it so it is accurate as to what is actually in the downloads folder...
+function saveWavelengths() {
+    for (let wavelength in wavelengths) {
+        while (wavelengths[wavelength].length > maxImages) {
+            wavelengths[wavelength].pop();
+        }
+    }
+
+    const jsonFilePath = './wavelengths.json';
+    fs.writeFileSync(jsonFilePath, JSON.stringify(wavelengths, null, 2));
+    console.log('Updated wavelengths.json');
+}
 
 /*
 async function fetchImage(url, path) {
