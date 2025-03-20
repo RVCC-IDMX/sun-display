@@ -3,7 +3,7 @@ const path = require('path');
 const cron = require('node-cron');
 const { createCanvas, loadImage } = require('canvas');
 
-const imageInterval = 5 // Minutes between creating new images
+const imageInterval = 15 // Minutes between creating new images
 
 const dateRemoveMask = './masks/date-remove-mask.png'; // Used for every image other than wavelength 171
 const aia171Mask = './masks/aia171-mask.png'; // Used for just wavelength 171 images
