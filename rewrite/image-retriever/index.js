@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const cron = require('node-cron');
+const { Console } = require('console');
 
 const maxImages = 300 // Temp number
 
@@ -53,15 +54,14 @@ async function createDir(name) {
 ensureDirs().then(() => {
     console.log('Starting chron.');
 
-    saveWavelengths();
-
-    fetchImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0171.jpg', 'aia171')
+    createImages();
 
     cron.schedule(`*/${imageInterval} * * * *`, () => {
-        //createImages();
+        createImages();
     });
 });
 
+/*
 // Sometimes connection will just close, retrying seems to help some times
 async function fetchWithRetry(url, retries = 3, delay = 5000) {
     for (let i = 0; i < retries; i++) {
@@ -79,6 +79,7 @@ async function fetchWithRetry(url, retries = 3, delay = 5000) {
     }
     return null;
 }
+*/
 
 // Await might not be nessecary but I dont want to pull 4 images from the servers at once
 async function createImages() {
@@ -121,10 +122,10 @@ async function fetchImage(url, wavelength) {
     const response = await fetch(url);
     const formattedDate = getConvertedDate(response.headers.get('last-modified'));
 
-    console.log(formattedDate);
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer, 'binary');
     fs.writeFileSync(`./download/${wavelength}/` + `${wavelength}-${formattedDate}.jpg`, buffer);
+    console.log(`Successfully downloaded ${wavelength}-${formattedDate}.jpg`)
 }
 
 function getConvertedDate(dateString) {

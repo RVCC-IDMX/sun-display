@@ -29,5 +29,15 @@ div {
     position: fixed;
     bottom: 0;
     width: 100vw;
-    height: 50px;
+    height: 100px;
+    z-index: 2;
+}
+
+p {
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    color: white;
+    position: fixed;
+    bottom: 0px;
+    font-size: 5rem;
+    z-index: 3;
 }
