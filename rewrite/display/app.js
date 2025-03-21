@@ -7,20 +7,29 @@ const pathToRetriever = '../image-retriever/';
 
 const imageToSkip = 5; // How many images giving an input will skip
 
+const imageUpdateDelay = 600000; // 600000 ms = 10 minutes (Time between grabbing new image paths)
+const resetDisplayDelay = 180000; // 180000 ms = 3 minutes (Time between reseting the display to most recent image)
+
+let test = 1000;
 let imgFilePaths = {};
 let imageIndex = 0;
 
 let currentWavelength = defaultWavelength;
+
+let resetDisplayIntervalId;
 
 main();
 
 async function main() {
     await getFilePaths();
 
+    resetDisplay();
+
     updateCanvasImage(imgFilePaths[currentWavelength][imageIndex]);
     formatDate(imgFilePaths[currentWavelength][imageIndex]);
 
     document.addEventListener('keydown', (event) => {
+        resetDisplay(); // Resets reset countdown
         if (event.key === '1') changeWavelength('aia171');
         if (event.key === '2') changeWavelength('aia193');
         if (event.key === '3') changeWavelength('aia211');
@@ -50,12 +59,17 @@ function updateCanvasImage(imagePath) {
     };
 }
 
+function changeImage() {
+    updateCanvasImage(imgFilePaths[currentWavelength][imageIndex]);
+    formatDate(imgFilePaths[currentWavelength][imageIndex]);
+}
+
 function changeWavelength(wavelength) {
     if (imgFilePaths[wavelength][imageIndex]) {
         currentWavelength = wavelength;
-        updateCanvasImage(imgFilePaths[currentWavelength][imageIndex]);
-        formatDate(imgFilePaths[currentWavelength][imageIndex]);
+        changeImage();
     } else {
+        // Go to the last available image if current image doesn't exist
         currentWavelength = wavelength;
         updateCanvasImage(imgFilePaths[currentWavelength][imgFilePaths[currentWavelength].length - 1]);
         formatDate(imgFilePaths[currentWavelength][imgFilePaths[currentWavelength].length - 1]);
@@ -68,8 +82,7 @@ function moveBackImage(multiplier) {
     } else {
         imageIndex = imgFilePaths[currentWavelength].length - 1;
     }
-    updateCanvasImage(imgFilePaths[currentWavelength][imageIndex]);
-    formatDate(imgFilePaths[currentWavelength][imageIndex]);
+    changeImage();
 }
 
 function moveForwardImage(multiplier) {
@@ -78,9 +91,23 @@ function moveForwardImage(multiplier) {
     } else {
         imageIndex = 0;
     }
-    updateCanvasImage(imgFilePaths[currentWavelength][imageIndex]);
-    formatDate(imgFilePaths[currentWavelength][imageIndex]);
+    changeImage();
 }
+
+setInterval(getFilePaths, imageUpdateDelay);
+
+function resetDisplay() {
+    if (resetDisplayIntervalId) {
+        clearInterval(resetDisplayIntervalId);
+    }
+
+    resetDisplayIntervalId = setInterval(() => {
+        imageIndex = 0;
+        changeImage();
+        console.log('Display Current image reset');
+    }, resetDisplayDelay);
+}
+
 
 async function getFilePaths() {
     const url = "../image-retriever/wavelengths.json";
@@ -92,6 +119,7 @@ async function getFilePaths() {
         }
 
         imgFilePaths = await response.json();
+        console.log('Updated Image Paths');
     } catch (error) {
         console.error(error.message);
     }
@@ -104,6 +132,6 @@ function formatDate(inputString) {
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
     const formattedDate = `${monthNames[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
-    
+
     dateText.innerHTML = formattedDate;
 }
