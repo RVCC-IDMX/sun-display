@@ -3,8 +3,8 @@ const path = require('path');
 const cron = require('node-cron');
 const sharp = require('sharp');
 
+const fetchTimeoutTimer = 30000; // ms before fetch timesout, servers seem to be too iffy for the defaut 10 seconds.
 const maxImages = 0; // Number of images kept before oldest is deleted, set to 0 to keep all images.
-
 const imageInterval = 15 // Minutes between creating new images
 const compressImages = false;
 
@@ -110,7 +110,7 @@ function saveWavelengths() {
 async function fetchImage(url, wavelength, retries = 3, delay = 5000) {
     for (let i = 0; i < retries; i++) {
         try {
-            const response = await fetch(url);
+            const response = await fetch(url, { signal: AbortSignal.timeout( fetchTimeoutTimer ) });
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch image, status: ${response.status}`);
