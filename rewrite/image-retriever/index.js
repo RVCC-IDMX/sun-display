@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const cron = require('node-cron');
+const sharp = require('sharp');
 
 const maxImages = 0; // Number of images kept before oldest is deleted, set to 0 to keep all images.
 
 const imageInterval = 15 // Minutes between creating new images
+const compressImages = false;
 
 const wavelengths = {
     aia171: [],
@@ -28,8 +30,8 @@ async function ensureDirs() {
         console.log('All directories created.');
     } catch (err) {
         console.error("Error while creating directories:", err);
-    }
-}
+    };
+};
 
 // Making this async avoids the highly unlikley error of chron running before directory exists
 async function createDir(name) {
@@ -46,9 +48,9 @@ async function createDir(name) {
             });
         } else {
             resolve();
-        }
+        };
     });
-}
+};
 
 ensureDirs().then(() => {
     console.log('Starting chron.');
@@ -74,17 +76,18 @@ function saveWavelengths() {
     for (let wavelength in wavelengths) {
         wavelengths[wavelength].length = 0; // Clear arrays so they dont add duplicate file paths
 
+        // Sort files by modification time to make sure most recent is on top
         fs.readdirSync(`./download/${wavelength}/`)
             .map(fileName => {
                 const filePath = path.join(`./download/${wavelength}/`, fileName);
                 const stats = fs.statSync(filePath);
                 return { fileName, mtime: stats.mtime };
             })
-            .sort((a, b) => b.mtime - a.mtime) // Sort files by modification time to make sure most recent is on top
+            .sort((a, b) => b.mtime - a.mtime)
             .map(file => {
                 wavelengths[wavelength].push(path.posix.join(`./download/${wavelength}/`, file.fileName));
             });
-    }
+    };
 
     for (let wavelength in wavelengths) {
         if (maxImages !== 0) {
@@ -95,7 +98,7 @@ function saveWavelengths() {
                 console.log(`Removed ${removedArray} from array`);
             }
         }
-    }
+    };
 
     // Write to JSON so it can be refrenced in display
     const jsonFilePath = './wavelengths.json';
@@ -114,29 +117,69 @@ async function fetchImage(url, wavelength, retries = 3, delay = 5000) {
             }
 
             const formattedDate = getConvertedDate(response.headers.get('last-modified'));
+            const convertedSize = getConvertedSize(response.headers.get('content-length'));
 
-            const arrayBuffer = await response.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer, 'binary');
+            let validSize = false;
 
-            const filePath = `./download/${wavelength}/${wavelength}-${formattedDate}.jpg`;
-            fs.writeFileSync(filePath, buffer);
+            // Don't download images that probably have large artifacts
+            switch (wavelength) {
+                case 'aia171':
+                    (convertedSize > 540 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}-${formattedDate} does not have a valid size, skipping download.`);
+                    break;
+                case 'aia193':
+                    (convertedSize > 435 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}-${formattedDate} does not have a valid size, skipping download.`);
+                    break;
+                case 'aia211':
+                    (convertedSize > 480 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}-${formattedDate} does not have a valid size, skipping download.`);
+                    break;
+                case 'aia304':
+                    (convertedSize > 820 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}-${formattedDate} does not have a valid size, skipping download.`);
+                    break;
+                default:
+                    console.error(`${wavelength} is not a valid wavelength.`)
+            };
 
-            console.log(`Successfully downloaded ${wavelength}-${formattedDate}.jpg`);
+            if (validSize) {
+                const arrayBuffer = await response.arrayBuffer();
+                const buffer = Buffer.from(arrayBuffer, 'binary');
+
+                if (compressImages) {
+                    const compressedBuffer = await sharp(buffer)
+                        .webp({ quality: 90 })
+                        .toBuffer();
+
+                    const filePath = `./download/${wavelength}/${wavelength}-${formattedDate}.webp`;
+                    fs.writeFileSync(filePath, compressedBuffer);
+
+                    console.log(`Successfully downloaded ${wavelength}-${formattedDate}.webp`);
+                }
+                else {
+                    const filePath = `./download/${wavelength}/${wavelength}-${formattedDate}.jpg`;
+                    fs.writeFileSync(filePath, buffer);
+
+                    console.log(`Successfully downloaded ${wavelength}-${formattedDate}.jpg`);
+                }
+
+            };
+
             return;
-
         } catch (err) {
             console.error(`Attempt ${i + 1} failed for ${url}:`, err);
             if (i < retries - 1) {
                 console.log(`Retrying in ${delay / 1000} seconds...`);
                 await new Promise(res => setTimeout(res, delay));
-            }
-        }
-    }
+            };
+        };
+    };
+
     console.error(`Failed to fetch image after ${retries} attempts.`);
+};
+
+function getConvertedSize(sizeString) {
+    return (sizeString / 1024).toFixed(2);
 }
 
 function getConvertedDate(dateString) {
-
     const date = new Date(dateString);
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, '0');
@@ -146,4 +189,4 @@ function getConvertedDate(dateString) {
     const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
     return `${year}-${month}-${day}T${hours}.${minutes}.${seconds}`;
-}
+};
