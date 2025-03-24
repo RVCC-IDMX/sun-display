@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const cron = require('node-cron');
 
-const maxImages = 300 // Temp number
+const maxImages = 0; // Number of images kept before oldest is deleted, set to 0 to keep all images.
 
 const imageInterval = 15 // Minutes between creating new images
 
@@ -71,23 +71,30 @@ async function createImages() {
 
 // Probably too slow with thousands of images, who knows
 function saveWavelengths() {
-    // Clear arrays so they dont add duplicate file paths
     for (let wavelength in wavelengths) {
-        wavelengths[wavelength].length = 0;
-    }
+        wavelengths[wavelength].length = 0; // Clear arrays so they dont add duplicate file paths
 
-    for (let wavelength in wavelengths) {
-        // Sort files by modification time to make sure most recent is on top
         fs.readdirSync(`./download/${wavelength}/`)
             .map(fileName => {
                 const filePath = path.join(`./download/${wavelength}/`, fileName);
                 const stats = fs.statSync(filePath);
                 return { fileName, mtime: stats.mtime };
             })
-            .sort((a, b) => b.mtime - a.mtime)
+            .sort((a, b) => b.mtime - a.mtime) // Sort files by modification time to make sure most recent is on top
             .map(file => {
                 wavelengths[wavelength].push(path.posix.join(`./download/${wavelength}/`, file.fileName));
             });
+    }
+
+    for (let wavelength in wavelengths) {
+        if (maxImages !== 0) {
+            while (wavelengths[wavelength].length > maxImages) {
+                console.log(`Image count exceeded max images, deleting ${wavelengths[wavelength][wavelengths[wavelength].length - 1]}`);
+                fs.unlinkSync(path.join(__dirname, wavelengths[wavelength][wavelengths[wavelength].length - 1]));
+                let removedArray = wavelengths[wavelength].pop();
+                console.log(`Removed ${removedArray} from array`);
+            }
+        }
     }
 
     // Write to JSON so it can be refrenced in display
@@ -96,7 +103,7 @@ function saveWavelengths() {
     console.log('Updated wavelengths.json');
 };
 
-// Sometimes connection will just close, retrying seems to help some times
+// Sometimes connection will timeout, retrying seems to help some times
 async function fetchImage(url, wavelength, retries = 3, delay = 5000) {
     for (let i = 0; i < retries; i++) {
         try {
