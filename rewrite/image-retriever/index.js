@@ -107,7 +107,7 @@ function saveWavelengths() {
 };
 
 // Sometimes connection will timeout, retrying seems to help some times
-async function fetchImage(url, wavelength, retries = 3, delay = 5000) {
+async function fetchImage(url, wavelength, retries = 5, delay = 5000) {
     for (let i = 0; i < retries; i++) {
         try {
             const response = await fetch(url, { signal: AbortSignal.timeout( fetchTimeoutTimer ) });
