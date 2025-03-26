@@ -40,6 +40,11 @@ async function main() {
         if (event.key === 'a') moveBackImage(2);
         if (event.key === 'd') moveForwardImage(2);
     });
+
+    document.addEventListener('mousemove', (event => {
+        imageIndex = ((event.clientX / window.innerWidth) * imgFilePaths[currentWavelength].length).toFixed(0);
+        changeImage();
+    }))
 }
 
 async function updateCanvasImage(imagePath) {
