@@ -10,9 +10,10 @@ const imageToSkip = 5; // How many images giving an input will skip
 const imageUpdateDelay = 600000; // 600000 ms = 10 minutes (Time between grabbing new image paths)
 const resetDisplayDelay = 180000; // 180000 ms = 3 minutes (Time between reseting the display to most recent image)
 
-let test = 1000;
 let imgFilePaths = {};
 let imageIndex = 0;
+
+const img = new Image();
 
 let currentWavelength = defaultWavelength;
 
@@ -41,22 +42,27 @@ async function main() {
     });
 }
 
-function updateCanvasImage(imagePath) {
-    const img = new Image();
+async function updateCanvasImage(imagePath) {
     img.src = pathToRetriever + imagePath;
 
     img.onload = () => {
-        const maxCanvasWidth = window.innerWidth * 1;
-        const maxCanvasHeight = window.innerHeight * 1;
-
-        let scale = Math.min(maxCanvasWidth / img.width, maxCanvasHeight / img.height);
-
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        drawCanvasImage();
     };
+}
+
+async function drawCanvasImage() {
+    let imgBitmap = await createImageBitmap(img);
+
+    const maxCanvasWidth = window.innerWidth * 1;
+    const maxCanvasHeight = window.innerHeight * 1;
+
+    let scale = Math.min(maxCanvasWidth / img.width, maxCanvasHeight / img.height);
+
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(imgBitmap, 0, 0, canvas.width, canvas.height);
 }
 
 function changeImage() {

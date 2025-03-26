@@ -145,7 +145,7 @@ async function fetchImage(url, wavelength, retries = 5, delay = 5000) {
 
                 if (compressImages) {
                     const compressedBuffer = await sharp(buffer)
-                        .webp({ quality: 90 })
+                        .webp({ quality: 80 })
                         .toBuffer();
 
                     const filePath = `./download/${wavelength}/${wavelength}-${formattedDate}.webp`;
