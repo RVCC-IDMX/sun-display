@@ -42,8 +42,13 @@ async function main() {
     });
 
     document.addEventListener('mousemove', (event => {
-        imageIndex = ((event.clientX / window.innerWidth) * imgFilePaths[currentWavelength].length).toFixed(0);
+        let norm = (event.clientX / window.innerWidth);
+            norm = 1 - norm;
+            norm *= imgFilePaths[currentWavelength].length-1;
+        imageIndex = Math.floor(norm);
         changeImage();
+        console.log(imageIndex, imgFilePaths[currentWavelength].length, norm);
+        console.log(imgFilePaths[currentWavelength][imageIndex])
     }))
 }
 
@@ -137,6 +142,9 @@ async function getFilePaths() {
 }
 
 function formatDate(inputString) {
+
+    if (inputString == undefined) console.log("WHOOPS");
+
     const dateString = inputString.split('-')[1] + '-' + inputString.split('-')[2] + '-' + inputString.split('-')[3].split('T')[0];
     const date = new Date(dateString + 'T00:00:00Z');
 
