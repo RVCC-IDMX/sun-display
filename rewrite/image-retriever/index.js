@@ -124,7 +124,7 @@ async function fetchImage(url, wavelength, retries = 5, delay = 5000) {
             // Don't download images that probably have large artifacts, values are in KB
             switch (wavelength) {
                 case 'aia171':
-                    (convertedSize > 640 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}-${formattedDate} does not have a valid size, skipping download.`);
+                    (convertedSize > 680 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}-${formattedDate} does not have a valid size, skipping download.`);
                     break;
                 case 'aia193':
                     (convertedSize > 435 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}-${formattedDate} does not have a valid size, skipping download.`);
