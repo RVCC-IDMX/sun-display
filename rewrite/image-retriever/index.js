@@ -6,7 +6,7 @@ const sharp = require('sharp');
 const fetchTimeoutTimer = 30000; // ms before fetch timesout, servers seem to be too iffy for the defaut 10 seconds.
 const maxImages = 0; // Number of images kept before oldest is deleted, set to 0 to keep all images.
 const imageInterval = 15 // Minutes between creating new images
-const compressImages = false;
+const compressImages = true;
 
 const wavelengths = {
     aia171: [],
@@ -149,10 +149,10 @@ async function fetchImage(url, wavelength, retries = 5, delay = 5000) {
                         .jpeg({ quality: 80 })
                         .toBuffer();
 
-                    const filePath = `./download/${wavelength}/${wavelength}-${formattedDate}.webp`;
+                    const filePath = `./download/${wavelength}/${wavelength}-${formattedDate}.jpg`;
                     fs.writeFileSync(filePath, compressedBuffer);
 
-                    console.log(`Successfully downloaded ${wavelength}-${formattedDate}.webp`);
+                    console.log(`Successfully downloaded ${wavelength}-${formattedDate}.jpg`);
                 }
                 else {
                     const filePath = `./download/${wavelength}/${wavelength}-${formattedDate}.jpg`;
