@@ -77,7 +77,16 @@ function handleMouseMove(event) {
         changeImage();
     }
     else {
-        imageIndex = imageIndex - event.movementX;
+        if ((imageIndex - event.movementX) > imgFilePaths[currentWavelength].length) {
+            imageIndex = imgFilePaths[currentWavelength].length - 1;
+        }
+        else if ((imageIndex - event.movementX) < 0) {
+            imageIndex = 0;
+        }
+        else {
+            imageIndex -= event.movementX;
+        }
+
         changeImage();
     }
 };
