@@ -77,7 +77,7 @@ function handleMouseMove(event) {
         changeImage();
     }
     else {
-        imageIndex = imageIndex + event.movementX;
+        imageIndex = imageIndex - event.movementX;
         changeImage();
     }
 };
