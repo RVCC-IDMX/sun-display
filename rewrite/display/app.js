@@ -21,7 +21,7 @@ async function main() {
 
     // Change throttle time to make it more smooth but if you go too low it will start glitching
     document.addEventListener('keydown', throttle(handleKeyDown, 100)); // If we dont throttle this as well you can break the program if you spam switch the wavelength
-    document.addEventListener('mousemove', throttle(handleMouseMove, 50));
+    document.addEventListener('mousemove', handleMouseMove);//throttle(handleMouseMove, 25));
 }
 
 function handleKeyDown(event) {
@@ -77,26 +77,40 @@ function throttle(func, limit) {
     };
 }
 
+var drawThrottle = false;
+const imgBitmap = document.createElement("img");
+
 async function updateCanvasImage(imagePath) {
+    if (drawThrottle) return;
     try {
-        const response = await fetch(pathToRetriever + imagePath);
-        if (!response.ok) {
-            throw new Error(`Error fetching image: ${response.status}`);
-        }
+        drawThrottle = true;
+        
+        //const response = await fetch(pathToRetriever + imagePath);
+        //if (!response.ok) {
+        //    throw new Error(`Error fetching image: ${response.status}`);
+        //}
 
         // Using blobs with imageBitmap seems to speed things up
-        const blob = await response.blob();
-        const imgBitmap = await createImageBitmap(blob);
+        //const blob = await response.blob();
+        //const imgBitmap = await createImageBitmap(blob);
 
-        const maxCanvasWidth = window.innerWidth;
-        const maxCanvasHeight = window.innerHeight;
-        const scale = Math.min(maxCanvasWidth / imgBitmap.width, maxCanvasHeight / imgBitmap.height);
+        imgBitmap.onload = () => {
 
-        canvas.width = imgBitmap.width * scale;
-        canvas.height = imgBitmap.height * scale;
+            const maxCanvasWidth = window.innerWidth;
+            const maxCanvasHeight = window.innerHeight;
+            const scale = Math.min(maxCanvasWidth / imgBitmap.width, maxCanvasHeight / imgBitmap.height);
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(imgBitmap, 0, 0, canvas.width, canvas.height);
+            canvas.width = imgBitmap.width * scale;
+            canvas.height = imgBitmap.height * scale;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(imgBitmap, 0, 0, canvas.width, canvas.height);
+            
+            drawThrottle = false;
+
+        }
+        imgBitmap.src = pathToRetriever + imagePath;
+
     } catch (err) {
         console.error(err);
     }
