@@ -14,6 +14,8 @@ let imageIndex = 0;
 let currentWavelength = defaultWavelength;
 let resetDisplayIntervalId = null;
 
+let mouseLocked = false;
+
 async function main() {
     await getFilePaths();
     resetDisplay();
@@ -21,8 +23,17 @@ async function main() {
 
     // Change throttle time to make it more smooth but if you go too low it will start glitching
     document.addEventListener('keydown', throttle(handleKeyDown, 100)); // If we dont throttle this as well you can break the program if you spam switch the wavelength
-    document.addEventListener('mousemove', handleMouseMove);//throttle(handleMouseMove, 25));
-}
+    document.addEventListener('mousemove', throttle(handleMouseMove, 16)); // 60fps
+
+    document.addEventListener('keypress', () => { canvas.requestPointerLock() }); // Lock cursor on keypress
+    document.addEventListener("pointerlockchange", lockChangeAlert);
+
+};
+
+function lockChangeAlert() {
+    document.pointerLockElement === canvas ? mouseLocked = true : mouseLocked = false;
+    console.log('mouseLocked: ', mouseLocked)
+};
 
 function handleKeyDown(event) {
     resetDisplay(); // Reset idle timeout
@@ -53,29 +64,35 @@ function handleKeyDown(event) {
             moveForwardImage(2);
             break;
     }
-}
+};
 
 function handleMouseMove(event) {
     resetDisplay(); // Reset idle timeout
 
-    let norm = (event.clientX / window.innerWidth);
-    norm = 1 - norm;
-    norm *= imgFilePaths[currentWavelength].length - 1;
-    imageIndex = Math.floor(norm);
-    changeImage();
-}
+    if (!mouseLocked) {
+        let norm = (event.clientX / window.innerWidth);
+        norm = 1 - norm;
+        norm *= imgFilePaths[currentWavelength].length - 1;
+        imageIndex = Math.floor(norm);
+        changeImage();
+    }
+    else {
+        imageIndex = imageIndex + event.movementX;
+        changeImage();
+    }
+};
 
 // I have found that this is needed, the awaits stack up and things jump around a lot without throttling the mousemove event
 function throttle(func, limit) {
     let inThrottle;
-    return function () {
+    return function (event) {
         if (!inThrottle) {
             func.apply(this, arguments);
             inThrottle = true;
             setTimeout(() => (inThrottle = false), limit);
         }
     };
-}
+};
 
 var drawThrottle = false;
 const imgBitmap = document.createElement("img");
@@ -84,7 +101,7 @@ async function updateCanvasImage(imagePath) {
     if (drawThrottle) return;
     try {
         drawThrottle = true;
-        
+
         //const response = await fetch(pathToRetriever + imagePath);
         //if (!response.ok) {
         //    throw new Error(`Error fetching image: ${response.status}`);
@@ -105,7 +122,7 @@ async function updateCanvasImage(imagePath) {
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(imgBitmap, 0, 0, canvas.width, canvas.height);
-            
+
             drawThrottle = false;
 
         }
@@ -114,7 +131,7 @@ async function updateCanvasImage(imagePath) {
     } catch (err) {
         console.error(err);
     }
-}
+};
 
 function changeImage() {
     const imagePath = imgFilePaths[currentWavelength][imageIndex];
@@ -122,7 +139,7 @@ function changeImage() {
         updateCanvasImage(imagePath);
         formatDate(imagePath);
     }
-}
+};
 
 function changeWavelength(wavelength) {
     if (imgFilePaths[wavelength] && imgFilePaths[wavelength][imageIndex]) {
@@ -132,17 +149,17 @@ function changeWavelength(wavelength) {
         imageIndex = imgFilePaths[wavelength].length - 1;
     }
     changeImage();
-}
+};
 
 function moveBackImage(multiplier) {
     imageIndex = Math.min(imageIndex + imageToSkip * multiplier, imgFilePaths[currentWavelength].length - 1);
     changeImage();
-}
+};
 
 function moveForwardImage(multiplier) {
     imageIndex = Math.max(imageIndex - imageToSkip * multiplier, 0);
     changeImage();
-}
+};
 
 function resetDisplay() {
     if (resetDisplayIntervalId) {
@@ -153,7 +170,7 @@ function resetDisplay() {
         changeImage();
         console.log('Display reset to current image');
     }, resetDisplayDelay);
-}
+};
 
 async function getFilePaths() {
     try {
@@ -166,7 +183,7 @@ async function getFilePaths() {
     } catch (error) {
         console.error(error.message);
     }
-}
+};
 
 function formatDate(inputString) {
     const parts = inputString.split('-');
@@ -178,7 +195,7 @@ function formatDate(inputString) {
     ];
     const formattedDate = `${monthNames[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
     dateText.innerHTML = formattedDate;
-}
+};
 
 setInterval(getFilePaths, imageUpdateDelay);
 
