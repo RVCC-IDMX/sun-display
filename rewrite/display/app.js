@@ -7,8 +7,8 @@ const pathToRetriever = '../image-retriever/';
 
 const imageToSkip = 5; // Number of images to skip when using keyboard, does nothing with mousemove
 const imageUpdateDelay = 10 * 60 * 1000; // Delay between updating json, 600000 is 10 minutes in ms 
-const resetDisplayDelay =  2 * 60 * 1000; // Delay before setting current image to latest, 180000 is 3 minutes in ms
-const idleImageRange = 200;
+const resetDisplayDelay =  1 * 60 * 1000; // Delay before setting current image to latest, 180000 is 3 minutes in ms
+const idleImageRange = 400;
 
 let imgFilePaths = {};
 let imageIndex = 0;
@@ -23,7 +23,7 @@ async function main() {
     resetDisplay();
     changeImage();
 
-    setInterval(idleLoop, 50);
+    setInterval(idleLoop, 30);
 
     // Change throttle time to make it more smooth but if you go too low it will start glitching
     document.addEventListener('keydown', throttle(handleKeyDown, 100)); // If we dont throttle this as well you can break the program if you spam switch the wavelength
