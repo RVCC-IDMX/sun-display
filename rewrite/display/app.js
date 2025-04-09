@@ -6,8 +6,8 @@ const defaultWavelength = 'aia171';
 const pathToRetriever = '../image-retriever/';
 
 const imageToSkip = 5; // Number of images to skip when using keyboard, does nothing with mousemove
-const imageUpdateDelay = 600000; // Delay between updating json, 600000 is 10 minutes in ms 
-const resetDisplayDelay = 1000; // Delay before setting current image to latest, 180000 is 3 minutes in ms
+const imageUpdateDelay = 10 * 60 * 1000; // Delay between updating json, 600000 is 10 minutes in ms 
+const resetDisplayDelay =  2 * 60 * 1000; // Delay before setting current image to latest, 180000 is 3 minutes in ms
 const idleImageRange = 200;
 
 let imgFilePaths = {};
