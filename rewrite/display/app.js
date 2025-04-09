@@ -7,7 +7,7 @@ const pathToRetriever = '../image-retriever/';
 
 const imageToSkip = 5; // Number of images to skip when using keyboard, does nothing with mousemove
 const imageUpdateDelay = 10 * 60 * 1000; // Delay between updating json, 600000 is 10 minutes in ms 
-const resetDisplayDelay =  1 * 60 * 1000; // Delay before setting current image to latest, 180000 is 3 minutes in ms
+const resetDisplayDelay =  45 * 1000; // Delay before setting current image to latest, 180000 is 3 minutes in ms
 const idleImageRange = 400;
 
 let imgFilePaths = {};
