@@ -80,10 +80,10 @@ function saveWavelengths() {
         fs.readdirSync(`./download/${wavelength}/`)
             .map(fileName => {
                 const filePath = path.join(`./download/${wavelength}/`, fileName);
-                const stats = fs.statSync(filePath);
-                return { fileName, mtime: stats.mtime };
+                return { fileName };
             })
-            .sort((a, b) => b.mtime - a.mtime)
+            .sort()
+            .reverse()
             .map(file => {
                 wavelengths[wavelength].push(path.posix.join(`./download/${wavelength}/`, file.fileName));
             });

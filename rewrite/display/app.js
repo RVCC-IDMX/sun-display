@@ -33,13 +33,6 @@ async function main() {
     document.addEventListener("pointerlockchange", lockChangeAlert);
 
 };
- 
-function test() {
-    console.log(imageIndex);
-    requestAnimationFrame(test);
-}
-
-requestAnimationFrame(test);
 
 function lockChangeAlert() {
     document.pointerLockElement === canvas ? mouseLocked = true : mouseLocked = false;
@@ -213,6 +206,7 @@ async function getFilePaths() {
             throw new Error(`Failed to fetch file paths: ${response.status}`);
         }
         imgFilePaths = await response.json();
+
         console.log('Updated Image Paths');
     } catch (error) {
         console.error(error.message);
