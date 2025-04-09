@@ -17,6 +17,43 @@ let resetDisplayIntervalId = null;
 
 let mouseLocked = false;
 let idle = false;
+let loopId;
+
+function padLoop() {
+  const gamepads = navigator.getGamepads();
+  if (!gamepads) {
+    return;
+  }
+
+  const gp = gamepads[0];
+  for(let b=0; b<gp.buttons.length; b++) {
+    if (gp.buttons[b].pressed) {
+        handleKeyDown('', b);
+    }
+  }
+
+  loopId = requestAnimationFrame(padLoop);
+}
+
+window.addEventListener("gamepadconnected", (e) => {
+  console.log(
+    "Gamepad connected at index %d: %s. %d buttons, %d axes.",
+    e.gamepad.index,
+    e.gamepad.id,
+    e.gamepad.buttons.length,
+    e.gamepad.axes.length,
+  );
+  loopId = requestAnimationFrame(padLoop);
+});
+
+window.addEventListener("gamepaddisconnected", (e) => {
+  console.log(
+    "Gamepad disconnected from index %d: %s",
+    e.gamepad.index,
+    e.gamepad.id,
+  );
+  cancelAnimationFrame(loopId);
+});
 
 async function main() {
     await getFilePaths();
@@ -31,17 +68,25 @@ async function main() {
 
     document.addEventListener('keypress', () => { canvas.requestPointerLock() }); // Lock cursor on keypress
     document.addEventListener("pointerlockchange", lockChangeAlert);
-
 };
 
 function lockChangeAlert() {
     document.pointerLockElement === canvas ? mouseLocked = true : mouseLocked = false;
 };
 
-function handleKeyDown(event) {
+function handleKeyDown(event, button) {
     resetDisplay(); // Reset idle timeout
 
-    switch (event.key) {
+    let b;
+
+    if (event === '') {
+        b = (button + 1).toString();
+    }
+    else {
+        b = event.key;
+    }
+
+    switch (b) {
         case '1':
             changeWavelength('aia171');
             break;
