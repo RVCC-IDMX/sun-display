@@ -8,6 +8,11 @@
     margin: 0;
 }
 
+@font-face {
+    font-family: "Space";
+    src: url(fonts/PlanetaryContact.ttf);
+}
+
 body {
     display: flex;
     justify-content: center;
@@ -28,7 +33,7 @@ div {
 }
 
 p {
-    font-family: Space Mono, monospace;
+    font-family: Space, monospace;
     font-weight: 400;
     color: white;
     position: fixed;
