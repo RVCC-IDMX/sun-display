@@ -33,13 +33,19 @@ div {
 }
 
 p {
-    font-family: Space, monospace;
+    font-family: Space, fantasy;
+    font-kerning: normal;
     font-weight: 400;
     color: white;
     position: fixed;
     bottom: 0px;
     font-size: 5rem;
     z-index: 3;
+}
+
+.smoothed {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 
