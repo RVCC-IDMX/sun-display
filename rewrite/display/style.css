@@ -28,7 +28,8 @@ div {
 }
 
 p {
-    font-family: SpaceMono-Regular, sans-serif;
+    font-family: Space Mono, monospace;
+    font-weight: 400;
     color: white;
     position: fixed;
     bottom: 0px;
