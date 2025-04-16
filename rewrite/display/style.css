@@ -28,10 +28,13 @@ div {
 }
 
 p {
-    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-family: SpaceMono-Regular, sans-serif;
     color: white;
     position: fixed;
     bottom: 0px;
     font-size: 5rem;
     z-index: 3;
 }
+
+
+
