@@ -4,7 +4,7 @@ const cron = require('node-cron');
 const sharp = require('sharp');
 
 const fetchTimeoutTimer = 30000; // ms before fetch timesout, servers seem to be too iffy for the defaut 10 seconds.
-const maxImages = 0; // Number of images kept before oldest is deleted, set to 0 to keep all images.
+const maxImages = 500000; // 500000 should be around 250gb and 10 years of images. Number of images kept before oldest is deleted, set to 0 to keep all images.
 const imageInterval = 15 // Minutes between creating new images
 const compressImages = true;
 
