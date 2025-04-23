@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const cron = require('node-cron');
 const sharp = require('sharp');
+const axios = require('axios');
+const cheerio = require('cheerio');
+const { URL } = require('url');
+
 
 const fetchTimeoutTimer = 30000; // ms before fetch timesout, servers seem to be too iffy for the defaut 10 seconds.
 const maxImages = 500000; // 500000 should be around 250gb and 10 years of images. Number of images kept before oldest is deleted, set to 0 to keep all images.
@@ -52,18 +56,41 @@ async function createDir(name) {
     });
 };
 
-ensureDirs().then(() => {
-    console.log('Starting chron.');
+ensureDirs().then(async () => {
+    saveWavelengths();
 
-    createImages();
+    await checkDate();
+
+    downloadImages();
 
     cron.schedule(`*/${imageInterval} * * * *`, () => {
-        createImages();
+        console.log('Starting chron.');
+        downloadImages();
     });
 });
 
+// Checks last image to see if it is out of date
+async function checkDate() {
+    const latestImage = wavelengths.aia171[0];
+
+    if (!latestImage) return;
+
+    const latestDate = new Date(latestImage.substring(23, 33));
+    const currentDate = new Date();
+
+    if (currentDate.getUTCDate() === latestDate.getUTCDate()) return;
+
+    latestDate.getFullYear()
+
+    const baseURL = `https://sdo.gsfc.nasa.gov/assets/img/browse/${latestDate.getFullYear()}/`;
+    const month = latestImage.substring(23, 33).substring(5, 7);
+    const day = latestImage.substring(23, 33).substring(8, 10);
+
+    startScraping(baseURL, month, day);
+}
+
 // Await might not be nessecary but I dont want to pull 4 images from the servers at once
-async function createImages() {
+async function downloadImages() {
     await fetchImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0171.jpg', 'aia171')
     await fetchImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0193.jpg', 'aia193');
     await fetchImage('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_2048_0211.jpg', 'aia211');
@@ -71,46 +98,11 @@ async function createImages() {
     saveWavelengths();
 }
 
-// Probably too slow with thousands of images, who knows
-function saveWavelengths() {
-    for (let wavelength in wavelengths) {
-        wavelengths[wavelength].length = 0; // Clear arrays so they dont add duplicate file paths
-
-        // Sort files by modification time to make sure most recent is on top
-        fs.readdirSync(`./download/${wavelength}/`)
-            .map(fileName => {
-                const filePath = path.join(`./download/${wavelength}/`, fileName);
-                return { fileName };
-            })
-            .sort()
-            .reverse()
-            .map(file => {
-                wavelengths[wavelength].push(path.posix.join(`./download/${wavelength}/`, file.fileName));
-            });
-    };
-
-    for (let wavelength in wavelengths) {
-        if (maxImages !== 0) {
-            while (wavelengths[wavelength].length > maxImages) {
-                console.log(`Image count exceeded max images, deleting ${wavelengths[wavelength][wavelengths[wavelength].length - 1]}`);
-                fs.unlinkSync(path.join(__dirname, wavelengths[wavelength][wavelengths[wavelength].length - 1]));
-                let removedArray = wavelengths[wavelength].pop();
-                console.log(`Removed ${removedArray} from array`);
-            }
-        }
-    };
-
-    // Write to JSON so it can be refrenced in display
-    const jsonFilePath = './wavelengths.json';
-    fs.writeFileSync(jsonFilePath, JSON.stringify(wavelengths, null, 2));
-    console.log('Updated wavelengths.json');
-};
-
 // Sometimes connection will timeout, retrying seems to help some times
 async function fetchImage(url, wavelength, retries = 5, delay = 5000) {
     for (let i = 0; i < retries; i++) {
         try {
-            const response = await fetch(url, { signal: AbortSignal.timeout( fetchTimeoutTimer ) });
+            const response = await fetch(url, { signal: AbortSignal.timeout(fetchTimeoutTimer) });
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch image, status: ${response.status}`);
@@ -175,6 +167,97 @@ async function fetchImage(url, wavelength, retries = 5, delay = 5000) {
 
     console.error(`Failed to fetch image after ${retries} attempts.`);
 };
+
+function saveWavelengths() {
+    for (let wavelength in wavelengths) {
+        wavelengths[wavelength].length = 0; // Clear arrays so they dont add duplicate file paths
+
+        // Sort files by file name to make sure most recent is on top
+        fs.readdirSync(`./download/${wavelength}/`)
+            .map(fileName => {
+                const filePath = path.join(`./download/${wavelength}/`, fileName);
+                return { fileName };
+            })
+            .sort()
+            .reverse()
+            .map(file => {
+                wavelengths[wavelength].push(path.posix.join(`./download/${wavelength}/`, file.fileName));
+            });
+    };
+
+    for (let wavelength in wavelengths) {
+        if (maxImages !== 0) {
+            while (wavelengths[wavelength].length > maxImages) {
+                console.log(`Image count exceeded max images, deleting ${wavelengths[wavelength][wavelengths[wavelength].length - 1]}`);
+                fs.unlinkSync(path.join(__dirname, wavelengths[wavelength][wavelengths[wavelength].length - 1]));
+                let removedArray = wavelengths[wavelength].pop();
+                console.log(`Removed ${removedArray} from array`);
+            }
+        }
+    };
+
+    // Write to JSON so it can be refrenced in display
+    const jsonFilePath = './wavelengths.json';
+    fs.writeFileSync(jsonFilePath, JSON.stringify(wavelengths, null, 2));
+    console.log('Updated wavelengths.json');
+};
+
+async function startScraping(baseURL, month, day) {
+    const startingMonth = Number(month);
+    const startingDay = Number(day);
+
+    for (let currentMonth = Number(month); currentMonth <= 12; currentMonth++) {
+        for (let day = startingMonth === currentMonth ? startingDay : 1; day <= 31; day++) {
+            const monthNumber = currentMonth < 10 ? '0' + currentMonth.toString() : currentMonth.toString();
+
+            const dayStr = day.toString().padStart(2, '0');
+            const folderUrl = `${baseURL}${monthNumber}/${dayStr}/`;
+
+            try {
+                await axios.get(folderUrl);
+                console.log(`Scraping: ${folderUrl}`);
+                await scrapeFolder(folderUrl);
+            } catch {
+                console.log(`Skipping ${folderUrl} (does not exist)`);
+            }
+        }
+    }
+}
+
+async function scrapeFolder(folderUrl) {
+    const validPatterns = ['0171', '0193', '0211', '0304'];
+
+    try {
+        const { data } = await axios.get(folderUrl);
+        const $ = cheerio.load(data);
+        const links = $('a');
+
+        for (let i = 0; i < links.length; i++) {
+            const fileName = $(links[i]).attr('href');
+            if (!fileName || !fileName.endsWith('.jpg') || !fileName.includes('_2048_') || fileName.includes('pfss')) {
+                continue;
+            }
+
+            for (const pattern of validPatterns) {
+                if (fileName.includes(`_2048_${pattern}`)) {
+                    const fileUrl = new URL(fileName, folderUrl).href;
+
+                    for (const wavelength in wavelengths) {
+                        if (fileUrl.includes('_0' + wavelength.substring(3, 6))) {
+                            fetchImage(fileUrl, wavelength);
+                            await new Promise(res => setTimeout(res, 20));
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+
+    } catch (error) {
+        console.error(`Failed to retrieve ${folderUrl}:`, error.message);
+    }
+}
 
 function getConvertedSize(sizeString) {
     return (sizeString / 1024).toFixed(2);

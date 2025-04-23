@@ -64,7 +64,7 @@ async function main() {
 
     // Change throttle time to make it more smooth but if you go too low it will start glitching
     document.addEventListener('keydown', throttle(handleKeyDown, 100)); // If we dont throttle this as well you can break the program if you spam switch the wavelength
-    document.addEventListener('mousemove', throttle(handleMouseMove, 8)); // 60fps
+    document.addEventListener('mousemove', throttle(handleMouseMove, 8)); // 8ms = 125fps
 
     document.addEventListener('keypress', () => { canvas.requestPointerLock() }); // Lock cursor on keypress
     document.addEventListener("pointerlockchange", lockChangeAlert);
@@ -127,6 +127,8 @@ function handleMouseMove(event) {
         changeImage();
     }
     else {
+        console.log(event.movementX)
+
         if ((imageIndex - event.movementX) > imgFilePaths[currentWavelength].length) {
             imageIndex = imgFilePaths[currentWavelength].length - 1;
         }
