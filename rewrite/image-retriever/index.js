@@ -122,16 +122,16 @@ async function fetchImage(url, wavelength, archive = false) {
             // Don't download images that probably have large artifacts, values are in KB
             switch (wavelength) {
                 case 'aia171':
-                    (convertedSize > 670 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}: ${url} has an invalid file size of ${convertedSize}, skipping download.`);
+                    (convertedSize > 660 && convertedSize < 1600) ? validSize = true : console.log(`${wavelength}: ${url} has an invalid file size of ${convertedSize}, skipping download.`);
                     break;
                 case 'aia193':
-                    (convertedSize > 435 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}: ${url} has an invalid file size of ${convertedSize}, skipping download.`);
+                    (convertedSize > 480 && convertedSize < 1600) ? validSize = true : console.log(`${wavelength}: ${url} has an invalid file size of ${convertedSize}, skipping download.`);
                     break;
                 case 'aia211':
-                    (convertedSize > 480 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}: ${url} has an invalid file size of ${convertedSize}, skipping download.`);
+                    (convertedSize > 490 && convertedSize < 1600) ? validSize = true : console.log(`${wavelength}: ${url} has an invalid file size of ${convertedSize}, skipping download.`);
                     break;
                 case 'aia304':
-                    (convertedSize > 820 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}: ${url} has an invalid file size of ${convertedSize}, skipping download.`);
+                    (convertedSize > 880 && convertedSize < 1600) ? validSize = true : console.log(`${wavelength}: ${url} has an invalid file size of ${convertedSize}, skipping download.`);
                     break;
                 default:
                     console.error(`${wavelength} is not a valid wavelength.`)
