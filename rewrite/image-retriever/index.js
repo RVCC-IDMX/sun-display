@@ -78,16 +78,12 @@ async function checkDate() {
     const latestDate = new Date(latestImage.substring(23, 33));
     const currentDate = new Date();
 
-    if (currentDate.getUTCDate() === latestDate.getUTCDate()) return;
-
     latestDate.getFullYear()
 
     const baseURL = `https://sdo.gsfc.nasa.gov/assets/img/browse/`;
     const year = latestImage.substring(23, 33).substring(0, 4);
     const month = latestImage.substring(23, 33).substring(5, 7);
     const day = latestImage.substring(23, 33).substring(8, 10);
-
-    console.log(latestImage)
 
     startScraping(baseURL, year, currentDate.getFullYear(), month, day);
 }

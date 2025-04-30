@@ -3,7 +3,7 @@ const ctx = canvas.getContext('2d');
 const dateText = document.getElementById('date-text');
 
 const defaultWavelength = 'aia171';
-const pathToRetriever = '../image-retriever/';
+const pathToRetriever = '/image-retriever/';
 
 const imageToSkip = 5; // Number of images to skip when using keyboard, does nothing with mousemove
 const imageUpdateDelay = 10 * 60 * 1000; // Delay between updating json, 600000 is 10 minutes in ms 
@@ -127,8 +127,6 @@ function handleMouseMove(event) {
         changeImage();
     }
     else {
-        console.log(event.movementX)
-
         if ((imageIndex - event.movementX) > imgFilePaths[currentWavelength].length) {
             imageIndex = imgFilePaths[currentWavelength].length - 1;
         }
@@ -270,7 +268,7 @@ function formatDate(inputString) {
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ];
-    const formattedDate = `${monthNames[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
+    const formattedDate = `${monthNames[date.getUTCMonth()]} ${date.getUTCDate() > 9 ? date.getUTCDate() : '0' + date.getUTCDate()}, ${date.getUTCFullYear()}`;
     dateText.innerHTML = formattedDate;
 };
 
