@@ -1,0 +1,13 @@
+[Unit]
+Description=Sun Display server
+After=network-online.target
+
+[Service]
+Type=simple
+User=sun-display
+WorkingDirectory=/home/sun-display/sun-display/rewrite/
+ExecStart=/usr/bin/node /home/sun-display/sun-display/rewrite/server.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
