@@ -1,0 +1,15 @@
+[Unit]
+Description=Sun Display Front End
+After=network-online.target
+After=display-server.service
+
+[Service]
+Type=simple
+User=sun-display
+Environment=DISPLAY=:0
+Environment=WAYLAND_DISPLAY=wayland-0
+ExecStart=/usr/bin/firefox -kiosk -private-window http://127.0.0.1:3000/
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

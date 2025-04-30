@@ -1,0 +1,13 @@
+[Unit]
+Description=NASA image retriever script
+After=network-online.target
+
+[Service]
+Type=simple
+User=sun-display
+WorkingDirectory=/home/sun-display/sun-display/rewrite/image-retriever/
+ExecStart=/usr/bin/node /home/sun-display/sun-display/rewrite/image-retriever/index.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
