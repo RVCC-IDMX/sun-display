@@ -12,7 +12,7 @@ app.get('/', (req, res) => {
 */
 
 app.use(express.static(path.join(__dirname,'display')));
-app.use(express.static(path.join(__dirname,'image-retriever')));
+app.use(express.static(path.join(__dirname)));
 
 app.listen(PORT, () => {
     console.log(`Server is listening at http://localhost:${PORT}`);
