@@ -75,10 +75,7 @@ async function checkDate() {
 
     if (!latestImage) return;
 
-    const latestDate = new Date(latestImage.substring(23, 33));
     const currentDate = new Date();
-
-    latestDate.getFullYear()
 
     const baseURL = `https://sdo.gsfc.nasa.gov/assets/img/browse/`;
     const year = latestImage.substring(23, 33).substring(0, 4);
