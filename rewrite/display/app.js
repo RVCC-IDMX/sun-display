@@ -7,7 +7,7 @@ const pathToRetriever = '/image-retriever/';
 
 const imageToSkip = 5; // Number of images to skip when using keyboard, does nothing with mousemove
 const imageUpdateDelay = 10 * 60 * 1000; // Delay between updating json, 600000 is 10 minutes in ms 
-const resetDisplayDelay =  30 * 1000; // Delay before setting current image to latest, 180000 is 3 minutes in ms
+const resetDisplayDelay = 30 * 1000; // Delay before setting current image to latest, 180000 is 3 minutes in ms
 const idleImageRange = 400;
 
 let imgFilePaths = {};
@@ -20,39 +20,39 @@ let idle = false;
 let loopId;
 
 function padLoop() {
-  const gamepads = navigator.getGamepads();
-  if (!gamepads) {
-    return;
-  }
-
-  const gp = gamepads[0];
-  for(let b=0; b<gp.buttons.length; b++) {
-    if (gp.buttons[b].pressed) {
-        handleKeyDown('', b);
+    const gamepads = navigator.getGamepads();
+    if (!gamepads) {
+        return;
     }
-  }
 
-  loopId = requestAnimationFrame(padLoop);
+    const gp = gamepads[0];
+    for (let b = 0; b < gp.buttons.length; b++) {
+        if (gp.buttons[b].pressed) {
+            handleKeyDown('', b);
+        }
+    }
+
+    loopId = requestAnimationFrame(padLoop);
 }
 
 window.addEventListener("gamepadconnected", (e) => {
-  console.log(
-    "Gamepad connected at index %d: %s. %d buttons, %d axes.",
-    e.gamepad.index,
-    e.gamepad.id,
-    e.gamepad.buttons.length,
-    e.gamepad.axes.length,
-  );
-  loopId = requestAnimationFrame(padLoop);
+    console.log(
+        "Gamepad connected at index %d: %s. %d buttons, %d axes.",
+        e.gamepad.index,
+        e.gamepad.id,
+        e.gamepad.buttons.length,
+        e.gamepad.axes.length,
+    );
+    loopId = requestAnimationFrame(padLoop);
 });
 
 window.addEventListener("gamepaddisconnected", (e) => {
-  console.log(
-    "Gamepad disconnected from index %d: %s",
-    e.gamepad.index,
-    e.gamepad.id,
-  );
-  cancelAnimationFrame(loopId);
+    console.log(
+        "Gamepad disconnected from index %d: %s",
+        e.gamepad.index,
+        e.gamepad.id,
+    );
+    cancelAnimationFrame(loopId);
 });
 
 async function main() {
@@ -261,14 +261,28 @@ async function getFilePaths() {
 };
 
 function formatDate(inputString) {
-    const parts = inputString.split('-');
-    const dateString = `${parts[1]}-${parts[2]}-${parts[3].split('T')[0]}`;
-    const date = new Date(dateString + 'T00:00:00Z');
+    const dateString = inputString.substring(23, 42);
+    const year = dateString.substring(0, 4);
+    const month = dateString.substring(5, 7);
+    const day = dateString.substring(8, 10);
+    const hour = dateString.substring(11, 13);
+    const minute = dateString.substring(14, 16)
+
     const monthNames = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ];
-    const formattedDate = `${monthNames[date.getUTCMonth()]} ${date.getUTCDate() > 9 ? date.getUTCDate() : '0' + date.getUTCDate()}, ${date.getUTCFullYear()}`;
+
+    /*
+    Calculates time.
+    const timeString = `${hour}:00:00`;
+    const timeString12hr = new Date('1970-01-01T' + timeString + 'Z')
+        .toLocaleTimeString('en-US',
+            { timeZone: 'EST', hour12: true, hour: '2-digit' }
+        );
+    */
+
+    const formattedDate = `${monthNames[Number(month - 1)]} ${day}, ${year}`;
     dateText.innerHTML = formattedDate;
 };
 
