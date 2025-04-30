@@ -82,11 +82,14 @@ async function checkDate() {
 
     latestDate.getFullYear()
 
-    const baseURL = `https://sdo.gsfc.nasa.gov/assets/img/browse/${latestDate.getFullYear()}/`;
+    const baseURL = `https://sdo.gsfc.nasa.gov/assets/img/browse/`;
+    const year = latestImage.substring(23, 33).substring(0, 4);
     const month = latestImage.substring(23, 33).substring(5, 7);
     const day = latestImage.substring(23, 33).substring(8, 10);
 
-    startScraping(baseURL, month, day);
+    console.log(latestImage)
+
+    startScraping(baseURL, year, currentDate.getFullYear(), month, day);
 }
 
 // Await might not be nessecary but I dont want to pull 4 images from the servers at once
@@ -99,7 +102,10 @@ async function downloadImages() {
 }
 
 // Sometimes connection will timeout, retrying seems to help some times
-async function fetchImage(url, wavelength, retries = 5, delay = 5000) {
+async function fetchImage(url, wavelength, archive = false) {
+    const retries = 5;
+    const delay = 5000;
+
     for (let i = 0; i < retries; i++) {
         try {
             const response = await fetch(url, { signal: AbortSignal.timeout(fetchTimeoutTimer) });
@@ -116,16 +122,16 @@ async function fetchImage(url, wavelength, retries = 5, delay = 5000) {
             // Don't download images that probably have large artifacts, values are in KB
             switch (wavelength) {
                 case 'aia171':
-                    (convertedSize > 680 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}-${formattedDate} does not have a valid size, skipping download.`);
+                    (convertedSize > 670 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}: ${url} has an invalid file size of ${convertedSize}, skipping download.`);
                     break;
                 case 'aia193':
-                    (convertedSize > 435 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}-${formattedDate} does not have a valid size, skipping download.`);
+                    (convertedSize > 435 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}: ${url} has an invalid file size of ${convertedSize}, skipping download.`);
                     break;
                 case 'aia211':
-                    (convertedSize > 480 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}-${formattedDate} does not have a valid size, skipping download.`);
+                    (convertedSize > 480 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}: ${url} has an invalid file size of ${convertedSize}, skipping download.`);
                     break;
                 case 'aia304':
-                    (convertedSize > 820 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}-${formattedDate} does not have a valid size, skipping download.`);
+                    (convertedSize > 820 && convertedSize < 2000) ? validSize = true : console.log(`${wavelength}: ${url} has an invalid file size of ${convertedSize}, skipping download.`);
                     break;
                 default:
                     console.error(`${wavelength} is not a valid wavelength.`)
@@ -144,13 +150,17 @@ async function fetchImage(url, wavelength, retries = 5, delay = 5000) {
                     const filePath = `./download/${wavelength}/${wavelength}-${formattedDate}.jpg`;
                     fs.writeFileSync(filePath, compressedBuffer);
 
-                    console.log(`Successfully downloaded ${wavelength}-${formattedDate}.jpg`);
+                    if (!archive) {
+                        console.log(`Successfully downloaded ${wavelength}-${formattedDate}.jpg`);
+                    }
                 }
                 else {
                     const filePath = `./download/${wavelength}/${wavelength}-${formattedDate}.jpg`;
                     fs.writeFileSync(filePath, buffer);
 
-                    console.log(`Successfully downloaded ${wavelength}-${formattedDate}.jpg`);
+                    if (!archive) {
+                        console.log(`Successfully downloaded ${wavelength}-${formattedDate}.jpg`);
+                    }
                 }
 
             };
@@ -202,23 +212,21 @@ function saveWavelengths() {
     console.log('Updated wavelengths.json');
 };
 
-async function startScraping(baseURL, month, day) {
-    const startingMonth = Number(month);
-    const startingDay = Number(day);
+async function startScraping(baseURL, startYear, endYear, startMonth, startDay) {
+    for (let year = Number(startYear); year <= Number(endYear); year++) {
+        for (let month = (year === Number(startYear) ? Number(startMonth) : 1); month <= 12; month++) {
+            for (let day = (year === Number(startYear) && month === Number(startMonth) ? Number(startDay) : 1); day <= 31; day++) {
+                const monthStr = month.toString().padStart(2, '0');
+                const dayStr = day.toString().padStart(2, '0');
+                const folderUrl = `${baseURL}${year}/${monthStr}/${dayStr}/`;
 
-    for (let currentMonth = Number(month); currentMonth <= 12; currentMonth++) {
-        for (let day = startingMonth === currentMonth ? startingDay : 1; day <= 31; day++) {
-            const monthNumber = currentMonth < 10 ? '0' + currentMonth.toString() : currentMonth.toString();
-
-            const dayStr = day.toString().padStart(2, '0');
-            const folderUrl = `${baseURL}${monthNumber}/${dayStr}/`;
-
-            try {
-                await axios.get(folderUrl);
-                console.log(`Scraping: ${folderUrl}`);
-                await scrapeFolder(folderUrl);
-            } catch {
-                console.log(`Skipping ${folderUrl} (does not exist)`);
+                try {
+                    await axios.get(folderUrl);
+                    console.log(`Scraping: ${folderUrl}`);
+                    await scrapeFolder(folderUrl);
+                } catch {
+                    console.log(`Skipping ${folderUrl} (does not exist)`);
+                }
             }
         }
     }
@@ -244,7 +252,7 @@ async function scrapeFolder(folderUrl) {
 
                     for (const wavelength in wavelengths) {
                         if (fileUrl.includes('_0' + wavelength.substring(3, 6))) {
-                            fetchImage(fileUrl, wavelength);
+                            fetchImage(fileUrl, wavelength, true);
                             await new Promise(res => setTimeout(res, 20));
                         }
                     }
