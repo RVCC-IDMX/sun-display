@@ -48,5 +48,24 @@ p {
   -moz-osx-font-smoothing: grayscale;
 }
 
+#progress-outline {
+    position: fixed;
+    bottom: 110px;
+    border: 8px solid rgba(255, 255, 255, 0.5);
+    background-color: transparent;
+    width: 300px;
+    height: 35px;
+    border-radius: 5px;
+}
+
+#progress-circle {
+    position: relative;
+    top: 0px;
+    background-color: rgba(255, 255, 255, 0.5);
+    width: 25px;
+    height: calc(25px - 6px);
+    left: calc(100% - 25px);
+}
+
 
 

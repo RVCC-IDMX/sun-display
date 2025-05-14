@@ -1,6 +1,7 @@
 const canvas = document.getElementById('sun-canvas');
 const ctx = canvas.getContext('2d');
 const dateText = document.getElementById('date-text');
+const progressCircle = document.getElementById('progress-circle');
 
 const defaultWavelength = 'aia171';
 const pathToRetriever = '/image-retriever/';
@@ -188,6 +189,9 @@ function changeImage() {
     if (imagePath) {
         updateCanvasImage(imagePath);
         formatDate(imagePath);
+        let percentage = (imageIndex / imgFilePaths[currentWavelength].length) * 100; 
+        progressCircle.style.left = `calc(${100 - percentage}% - ${25 * ((100 - percentage ) / 100)}px)`;
+        console.log(progressCircle.style.left);
     }
 };
 
